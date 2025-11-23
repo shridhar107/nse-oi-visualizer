@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import axios from 'axios';
 import UserAgent from 'user-agents';
 import { formatData, getPayoffData } from './utils.js';
@@ -18,6 +19,15 @@ const getOptionsWithUserAgent = () => {
 };
 
 const app = express();
+
+// Add CORS middleware HERE
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type'],
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
@@ -30,17 +40,22 @@ const getOptionChainWithRetry = async (cookie, identifier, retryCount = 0) => {
   try {
     const url = baseURL + apiEndpoint + "?symbol=" + encodeURIComponent(identifier);
     const response = await axios.get(url, { ...options, headers: { ...options.headers, Cookie: cookie } });
+    
+    if (!response || !response.data) {
+      throw new Error('No data received from NSE API');
+    }
+    
     const formattedData = formatData(response.data, identifier);
     return formattedData;
 
   } catch (error) {
-    console.error(`Error fetching option chain. Retry count: ${retryCount}`, error);
+    console.error(`Error fetching option chain for ${identifier}. Retry count: ${retryCount}`, error.message);
     if (retryCount < MAX_RETRY_COUNT) {
       return getOptionChainWithRetry(cookie, identifier, retryCount + 1);
     } else {
-      throw new Error('Failed to fetch option chain after multiple retries');
-    };
-  };
+      throw new Error(`Failed to fetch option chain for ${identifier} after multiple retries`);
+    }
+  }
 };
 
 const getCookies = async () => {
@@ -48,11 +63,16 @@ const getCookies = async () => {
   try {
     const response = await axios.get(baseURL + "option-chain", options);
     const cookie = response.headers['set-cookie'];
-    return cookie;
+    
+    if (!cookie) {
+      throw new Error('No cookies received from NSE');
+    }
+    
+    return Array.isArray(cookie) ? cookie.join('; ') : cookie;
   } catch (error) {
-    console.error('Error fetching cookies:');
+    console.error('Error fetching cookies:', error.message);
     throw new Error('Failed to fetch cookies');
-  };
+  }
 };
 
 app.get('/open-interest', async (req, res) => {
@@ -65,16 +85,16 @@ app.get('/open-interest', async (req, res) => {
   if (!identifier) {
     res.status(400).json({ error: 'Invalid request. No identifier was given.' });
     return;
-  };
+  }
 
   try {
     const cookie = await getCookies();
     const data = await getOptionChainWithRetry(cookie, identifier.toUpperCase());
     res.json(data).status(200).end();
   } catch (error) {
-    console.error('Proxy request error: here', error);
+    console.error('Proxy request error:', error);
     res.status(500).json({ error: 'Proxy request failed.' });
-  };
+  }
 });
 
 app.post('/builder', async (req, res) => {
@@ -85,8 +105,7 @@ app.post('/builder', async (req, res) => {
   } catch (error) {
     console.error('Payoff calculation error:', error);
     res.status(500).json({ error: 'Payoff calculation failed.' });
-  };
-  
+  }
 });
 
 app.listen(6123, () => {

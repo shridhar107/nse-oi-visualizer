@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from './components/Layout';
 import OpenInterest from './components/OpenInterest';
 import StrategyBuilder from "./components/StrategyBuilder";
+import OptionChain from "./components/OptionChain";
 import ToastContextProvider from "./contexts/ToastContextProvider";
 import Toast from "./components/Common/Toast";
 
@@ -14,6 +15,7 @@ function App() {
           <Route index element={<Navigate to="/open-interest" />} />
           <Route path="open-interest" element={<OpenInterest />} />
           <Route path="strategy-builder" element={<StrategyBuilder />} />
+          <Route path="option-chain" element={<OptionChain />} />
         </Route>
       </Routes>
     </ToastContextProvider>
