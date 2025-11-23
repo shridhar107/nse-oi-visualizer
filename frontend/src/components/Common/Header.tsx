@@ -55,7 +55,9 @@ const Header = () => {
       navigate('/open-interest');
     } else if (newValue === 1) {
       navigate('/strategy-builder');
-    };
+    } else if (newValue === 2) {
+      navigate('/option-chain');
+    }
   };
 
   useLayoutEffect(() => {
@@ -63,7 +65,9 @@ const Header = () => {
       setValue(0);
     } else if (path === '/strategy-builder') {
       setValue(1);
-    };
+    } else if (path === '/option-chain') {
+      setValue(2);
+    }
   }, [path]);
 
   useEffect(() => {
@@ -83,6 +87,7 @@ const Header = () => {
           <Tabs value={value} onChange={handleChange}>
             <Tab disableRipple label="Open Interest" sx={{ textTransform: "none", py: 2.9 }} />
             <Tab disableRipple label="Strategy Builder" sx={{ textTransform: "none", py: 2.9 }} />
+            <Tab disableRipple label="Option Chain" sx={{ textTransform: "none", py: 2.9 }} />
           </Tabs>
         </div>}
         <div style={{ display: "inline-flex", flexGrow: 1, flexBasis: 0, alignItems: "center", justifyContent: "flex-end" }}>
@@ -117,6 +122,7 @@ const Header = () => {
               >
                 <Tab disableRipple label="Open Interest" sx={{ textTransform: "none", py: 2.9 }} />
                 <Tab disableRipple label="Strategy Builder" sx={{ textTransform: "none", py: 2.9 }} />
+                <Tab disableRipple label="Option Chain" sx={{ textTransform: "none", py: 2.9 }} />
               </Tabs>
             </div>
           </Drawer>
